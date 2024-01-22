@@ -57,7 +57,12 @@ def create_video(image_filenames, fps):
 
 
 def understand_file(uploaded_file):
+    system_prompt = "You are an experienced social media growth and content maker. Your job is to make a short form video of 30 secs long based on the user's image. To do this you will generate 8 detailed prompts for feeding into DALLE to generate the images for the video and 1 tts prompt explaining the entire video with the help of the generated images. Return only the prompts as JSON response. The JSON should be in a format of image_prompts:[prompt:text] and tts_prompt:text" 
+    base64image = base64.b64encode(uploaded_file).decode('utf-8')
 
+    inference_params = dict(temperature=0.2, max_tokens=100, image_base64=uploaded_file)
+    model_prediction = Model("https://clarifai.com/openai/chat-completion/models/gpt-4-vision").predict_by_bytes(system_prompt.encode(), input_type="text", inference_params=inference_params)
+    print(model_prediction.outputs[0].data.text.raw)
 
     
     pass
@@ -112,5 +117,7 @@ if rad=="Home":
             st.error(f"Error: {e}")
 
     uploaded_file=st.file_uploader("Upload a file to use it as the video script")
-    if st.button("Generate Video from file"):
-        bytes_data = uploaded_file.getvalue()
+    if st.button("Generate Video from file") and uploaded_file is not None:
+        bytes_data = uploaded_file.read()
+        st.text(bytes_data)
+        vid = understand_file(bytes_data)
